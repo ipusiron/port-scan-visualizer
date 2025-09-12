@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Port Scan Visualizer</title>
+  <meta name="description" content="Learn TCP/UDP port scan methods with flag-focused animations." />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none';" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta http-equiv="Referrer-Policy" content="no-referrer" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>Port Scan Visualizer</h1>
+    <p class="subtitle">各種ポートスキャン手法の違いを、フラグ表示で直感理解できるツールです</p>
+  </header>
+
+  <!-- Theme Toggle Button -->
+  <button id="themeToggle" class="theme-toggle" aria-label="テーマ切り替え">
+    <span class="theme-icon">🌙</span>
+  </button>
+
+  <main class="container">
+    <!-- Controls -->
+    <section class="panel controls">
+      <label for="scanSelect">スキャン種類：</label>
+      <select id="scanSelect" aria-label="scan type">
+        <option value="tcp-connect">TCP Connect（フルコネクト）</option>
+        <option value="tcp-syn">TCP SYN（ハーフコネクト）</option>
+        <option value="fin">FIN</option>
+        <option value="null">NULL</option>
+        <option value="xmas">Xmas（FIN+PSH+URG）</option>
+        <option value="udp">UDP</option>
+      </select>
+
+      <label for="portInput">Port：</label>
+      <input id="portInput" type="number" min="1" max="65535" value="80" />
+
+      <label for="speedControl">速度：</label>
+      <select id="speedControl" aria-label="animation speed">
+        <option value="0.5">0.2x</option>
+        <option value="0.5">0.5x</option>
+        <option value="1" selected>1x（標準）</option>
+        <option value="1.5">1.5x</option>
+        <option value="2">2x</option>
+      </select>
+
+      <button id="playBtn" class="btn">▶ 再生</button>
+      <button id="resetBtn" class="btn btn-ghost">⟲ リセット</button>
+    </section>
+
+    <!-- Visualization area (skeleton only) -->
+    <section class="panel viz">
+      <div class="node scanner">
+        <div class="node-title">Scanner</div>
+        <div class="flag-legend-label" id="legendLabel">TCPフラグ凡例:</div>
+        <div class="flag-legend" id="tcpLegend">
+          <span class="flag syn" data-flag="SYN">SYN</span>
+          <span class="flag ack" data-flag="ACK">ACK</span>
+          <span class="flag fin" data-flag="FIN">FIN</span>
+          <span class="flag psh" data-flag="PSH">PSH</span>
+          <span class="flag urg" data-flag="URG">URG</span>
+          <span class="flag rst" data-flag="RST">RST</span>
+        </div>
+        <div class="flag-legend" id="udpLegend" style="display:none">
+          <span class="flag udp">UDP</span>
+          <span class="flag icmp">ICMP</span>
+        </div>
+      </div>
+
+      <div class="path">
+        <svg class="packet-animation" viewBox="0 0 500 100">
+          <defs>
+            <marker id="arrowhead-out" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <polygon points="0 0, 10 3, 0 6" fill="var(--accent)" />
+            </marker>
+            <marker id="arrowhead-in" markerWidth="10" markerHeight="10" refX="1" refY="3" orient="auto">
+              <polygon points="10 0, 0 3, 10 6" fill="var(--good)" />
+            </marker>
+          </defs>
+          
+          <!-- Base paths -->
+          <path id="path-out" d="M 50 50 L 450 50" stroke="var(--border)" stroke-width="2" fill="none" marker-end="url(#arrowhead-out)" opacity="0.3" />
+          <path id="path-in" d="M 450 50 L 50 50" stroke="var(--border)" stroke-width="2" fill="none" marker-end="url(#arrowhead-in)" opacity="0.3" />
+          
+          <!-- Animated packet group -->
+          <g id="packet-group" class="packet-group" opacity="0">
+            <rect class="packet-box" x="-20" y="-12" width="40" height="24" rx="6" fill="var(--accent)" stroke="var(--border)" />
+            <text class="packet-flags" x="0" y="0" text-anchor="middle" dominant-baseline="middle" fill="var(--text)" font-size="10" font-weight="600">SYN</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="node target">
+        <div class="node-title">Target : <span id="portLabel">80</span>/tcp|udp</div>
+        <div class="port-state-toggle">
+          <label class="toggle-switch">
+            <input type="checkbox" id="portStateToggle" checked>
+            <span class="toggle-slider"></span>
+            <span class="state-label" id="stateLabel">Open</span>
+          </label>
+        </div>
+        <div id="judgementBadge" class="judge-badge">–</div>
+      </div>
+    </section>
+
+    <!-- Timeline & Explanation -->
+    <section class="grid-2">
+      <div class="panel timeline">
+        <h2>時系列</h2>
+        <ol id="timelineList" class="timeline-list">
+        </ol>
+      </div>
+
+      <div class="panel explain">
+        <h2>解説</h2>
+        <div id="explainBox" class="explain-box">
+        </div>
+      </div>
+    </section>
+
+    <!-- IDS Detection Commentary -->
+    <section class="panel ids-detection">
+      <h2>🛡️ IDS検知コメンタリー</h2>
+      <div id="idsCommentary" class="ids-commentary">
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer">
+      🔗 GitHubリポジトリはこちら（
+      <a href="https://github.com/ipusiron/port-scan-visualizer" target="_blank">ipusiron/port-scan-visualizer</a>
+      ）
+    </div>
+  </footer>
+
+  <script src="./script.js"></script>
+</body>
+</html>
