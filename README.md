@@ -1,11 +1,36 @@
 <!--
 ---
-title: Port Scan Visualizer
-category: network-security
+id: day062
+slug: port-scan-visualizer
+
+title: "Port Scan Visualizer"
+
+subtitle_ja: "ポートスキャン手法可視化ツール"
+subtitle_en: "Port Scanning Technique Visualizer"
+
+description_ja: "代表的なポートスキャン手法（TCP Connect / TCP SYN / FIN / NULL / Xmas / UDP）を、送受パケットの時系列とTCPフラグの違いにフォーカスして学べる教育用可視化ツール"
+description_en: "Educational visualization tool for learning major port scanning techniques with time-series packet flow and TCP flag animations"
+
+category_ja:
+  - ネットワーク
+category_en:
+  - Network
+
 difficulty: 2
-description: Learn the differences between TCP/UDP scan methods with flag-focused animations.
-tags: [port-scan, tcp, udp, visualization, education]
-demo: https://ipusiron.github.io/port-scan-visualizer/
+
+tags:
+  - port-scan
+  - tcp
+  - udp
+  - nmap
+  - visualization
+  - education
+  - ids
+
+repo_url: "https://github.com/ipusiron/port-scan-visualizer"
+demo_url: "https://ipusiron.github.io/port-scan-visualizer/"
+
+hub: true
 ---
 -->
 

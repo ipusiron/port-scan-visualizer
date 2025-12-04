@@ -4,26 +4,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Port Scan Visualizer - Educational tool for visualizing different port scanning techniques (TCP Connect, TCP SYN, FIN, NULL, Xmas, UDP) with TCP flag animations and time-series packet flow.
+Port Scan Visualizer - Educational tool for visualizing different port scanning techniques (TCP Connect, TCP SYN, FIN, NULL, Xmas, UDP) with TCP flag animations and time-series packet flow. Part of "生成AIで作るセキュリティツール100" project (Day062).
 
 ## Architecture
 
 ### Core Structure
 - **Frontend-only application** (no backend/build process)
 - Static HTML/CSS/JavaScript served directly via GitHub Pages
-- All scan logic in `script.js:15-102` (SCANS object)
 - No external dependencies or frameworks
-
-### Key Files
-- `index.html` - Main UI structure with scanner/target nodes
-- `script.js` - Scan definitions, timeline rendering, UI interactions
-- `style.css` - Dark theme with scan-specific visual indicators
+- CSP headers configured in `index.html:8-11`
 
 ### Data Model
-Each scan type in SCANS object contains:
-- `frames[]` - Packet sequence with flags, direction, conditions
-- `judgement` - Port state determination logic
-- `summary` - Educational pros/cons for each scan method
+The `SCANS` object (`script.js:77-293`) defines all scan types with:
+- `name` - Display name
+- `proto` - Protocol (TCP/UDP)
+- `scenarios.open/closed` - Port state-specific packet sequences
+  - `frames[]` - Array of packet objects with `dir`, `proto`, `flags[]`, `desc`
+  - `judgement` - Result text (Open/Closed/Filtered)
+- `summary.pros/cons` - Educational bullet points
+- `ids` - IDS detection info (`detectability`, `signatures[]`, `evasion[]`, `comments`)
+
+### Key Functions
+- `animatePacket()` (`script.js:409-473`) - SVG packet animation between scanner/target
+- `animateSequence()` (`script.js:475-501`) - Orchestrates full scan animation
+- `renderTimeline()` (`script.js:515-523`) - Populates timeline list from frames
+- `renderIDSCommentary()` (`script.js:544-579`) - Displays IDS detection info
+- `sanitizeHTML()` (`script.js:36-40`) - XSS prevention for dynamic content
+
+### Styling
+- Dark/light theme via CSS variables (`style.css:1-24`)
+- Flag colors defined in JS (`script.js:296-304`) and CSS outlines (`style.css:58-65`)
+- Theme persisted to localStorage
 
 ## Development Notes
 
@@ -31,18 +42,14 @@ Each scan type in SCANS object contains:
 Open `index.html` directly in browser or use any static server:
 ```bash
 python -m http.server 8000
-# or
-npx serve .
 ```
 
-### Key Implementation Details
-- TCP flags visualized with color-coded outlines (`style.css:36-42`)
-- Timeline dynamically rendered from frame data (`script.js:105-114`)
-- Port state badge updates based on scan conditions (`script.js:134-141`)
-- No actual network scanning - purely educational animations
+### Adding a New Scan Type
+1. Add entry to `SCANS` object with `name`, `proto`, `scenarios`, `summary`, `ids`
+2. Add `<option>` to `#scanSelect` in `index.html:29-36`
+3. If new protocol, add flag styling in `style.css` and color in `flagColors`
 
-### Future Enhancements (TODO)
-- SVG packet movement animations
-- IDS detection commentary
-- Multi-port scan sequences
-- Japanese/English language toggle
+### Security Considerations
+- All user input sanitized via `sanitizeHTML()` before DOM insertion
+- Port input validated via `validatePort()` (`script.js:43-49`)
+- CSP prevents inline scripts and external connections
