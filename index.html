@@ -59,6 +59,15 @@
             <span class="state-label" id="stateLabel" data-i18n="ctl.stateOpen">開いている</span>
           </label>
         </div>
+        <div class="field">
+          <span class="field-label" id="complianceToggleLabel" data-i18n="ctl.compliance">OSのTCPスタック</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="complianceToggle" checked aria-labelledby="complianceToggleLabel" aria-describedby="complianceHint" />
+            <span class="toggle-slider" aria-hidden="true"></span>
+            <span class="state-label" id="complianceLabel" data-i18n="ctl.compliant">RFC 793準拠</span>
+          </label>
+          <small id="complianceHint" data-i18n="ctl.complianceHint">FIN・NULL・Xmasは、RFC 793に準拠しないスタックだと開でも閉でもRSTを返すため判定できません</small>
+        </div>
       </div>
       <div class="actions">
         <button type="button" id="playBtn" class="primary-btn" data-i18n="ctl.play">▶ 再生</button>
@@ -110,6 +119,7 @@
         <div class="node-title"><span data-i18n="node.target">標的</span>：<span id="portLabel">80</span>/<span id="protoLabel">tcp</span></div>
         <div id="judgementBadge" class="judge-badge" data-judge="pending" aria-live="polite" data-i18n="judge.pending">判定前</div>
       </div>
+      <p id="complianceNote" class="compliance-note" role="note" hidden data-i18n="ctl.complianceNote">この手法はRFC 793非準拠のスタックでは判定できません（開でもRST/ACKが返るため）</p>
     </section>
 
     <!-- 時系列・解説 -->

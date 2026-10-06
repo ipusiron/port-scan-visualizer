@@ -252,7 +252,20 @@ select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .judge-badge[data-judge="open"] { background: var(--det-low-bg); color: var(--det-low-text); border-color: var(--good); }
 .judge-badge[data-judge="closed"] { background: var(--det-high-bg); color: var(--det-high-text); border-color: var(--bad); }
 .judge-badge[data-judge="openFiltered"] { background: var(--det-medium-bg); color: var(--det-medium-text); }
+.judge-badge[data-judge="undecidable"] { background: var(--det-medium-bg); color: var(--det-medium-text); border-color: var(--det-medium-text); }
 .judge-badge[data-judge="pending"] { color: var(--muted); }
+
+/* RFC 793 非準拠で判定できない手法の注記（可視化の下に全幅で出す） */
+.compliance-note {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  color: var(--det-medium-text);
+  background: var(--det-medium-bg);
+  border-radius: 8px;
+}
+.compliance-note[hidden] { display: none; }
 
 /* ===== 時系列 ===== */
 .timeline-list { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 8px; }

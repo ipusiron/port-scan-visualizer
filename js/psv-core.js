@@ -8,7 +8,10 @@
   const SCAN_IDS = ['tcp-connect', 'tcp-syn', 'fin', 'null', 'xmas', 'udp'];
 
   // 判定の種類（表示文言は messages の judge.* ）
-  const JUDGE = { open: 'open', closed: 'closed', openFiltered: 'openFiltered' };
+  const JUDGE = { open: 'open', closed: 'closed', openFiltered: 'openFiltered', undecidable: 'undecidable' };
+
+  // RFC 793 に準拠しないスタック（Windows・一部Cisco・BSDI・OS/400 など）だと判定できなくなる手法
+  const NONCOMPLIANT_AFFECTED = new Set(['fin', 'null', 'xmas']);
 
   // パケット1つ: dir（out スキャナー→標的、in 標的→スキャナー、timeout 無応答）、proto、flags（TCP）
   //   icmp（ICMP の type/code）、descKey（説明の辞書キー）
@@ -141,13 +144,24 @@
   const DEFAULT_PORT = 80;
 
   // 指定した手法・状態（'open'/'closed'）のフレーム列と判定を返す
-  function scenario(scanId, state) {
+  // compliant=false かつ対象の手法（FIN/NULL/Xmas）のときは、開でも閉でも RST/ACK が返り判定できない
+  function scenario(scanId, state, compliant = true) {
     const scan = SCANS[scanId];
     if (!scan) throw new Error(`unknown scan: ${scanId}`);
+    if (!compliant && NONCOMPLIANT_AFFECTED.has(scanId)) {
+      return {
+        judgement: JUDGE.undecidable,
+        frames: [
+          scan[state].frames[0], // 送るパケット（FIN/NULL/Xmas）は同じ
+          { dir: 'in', proto: 'TCP', flags: ['RST', 'ACK'], descKey: 'f.rstAckNoncompliant' }
+        ]
+      };
+    }
     return scan[state];
   }
-  const getFrames = (scanId, state) => scenario(scanId, state).frames;
-  const getJudgement = (scanId, state) => scenario(scanId, state).judgement;
+  const getFrames = (scanId, state, compliant) => scenario(scanId, state, compliant).frames;
+  const getJudgement = (scanId, state, compliant) => scenario(scanId, state, compliant).judgement;
+  const affectedByCompliance = (scanId) => NONCOMPLIANT_AFFECTED.has(scanId);
 
   // パケットに表示する短いラベル（SYN+ACK、UDP、ICMP、NULL）
   function packetLabel(frame) {
@@ -158,7 +172,7 @@
   }
 
   globalThis.PsvCore = {
-    SCAN_IDS, JUDGE, SCANS, DETECTABILITY, TCP_FLAGS, DEFAULT_PORT,
-    validatePort, scenario, getFrames, getJudgement, packetLabel
+    SCAN_IDS, JUDGE, SCANS, DETECTABILITY, TCP_FLAGS, DEFAULT_PORT, NONCOMPLIANT_AFFECTED,
+    validatePort, scenario, getFrames, getJudgement, packetLabel, affectedByCompliance
   };
 })();

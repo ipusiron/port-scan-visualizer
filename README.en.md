@@ -35,6 +35,9 @@ You can try it directly in your browser.
 >![Dark mode, TCP SYN scan](assets/en/screenshot-dark.png)
 >*A TCP SYN (half-open) scan in dark mode*
 
+>![OS RFC compliance toggle](assets/en/screenshot-rfc.png)
+>*With the OS TCP stack set to non-compliant, a FIN scan returns RST/ACK even when open, so no verdict is possible*
+
 ---
 
 ## ✨ Features
@@ -44,6 +47,7 @@ You can try it directly in your browser.
 - Animates the packet movement between the scanner and the target, one step at a time, with SVG.
 - Lets you toggle the target port state (open / closed) to compare how the same method responds.
 - Explains each method's overview, strengths, weaknesses and privilege, plus IDS detectability and evasion tricks.
+- Lets you switch the OS TCP stack between RFC 793-compliant and non-compliant, and see how non-compliant stacks (Windows, etc.) make FIN/NULL/Xmas undecidable.
 - Lets you pause and resume playback, and respects the OS "reduce motion" setting by toning down the animation.
 - Switches between Japanese and English, and between light and dark themes (your choice is saved automatically).
 
@@ -146,9 +150,11 @@ port-scan-visualizer/
 ├── assets/
 │   ├── en/
 │   │   ├── screenshot-dark.png  # Screenshot: English, dark mode
+│   │   ├── screenshot-rfc.png   # Screenshot: English, RFC compliance toggle
 │   │   ├── screenshot-udp.png   # Screenshot: English, UDP scan
 │   │   └── screenshot.png       # Screenshot: English, TCP Connect
 │   ├── screenshot-dark.png      # Screenshot: dark mode
+│   ├── screenshot-rfc.png       # Screenshot: RFC compliance toggle
 │   ├── screenshot-udp.png       # Screenshot: UDP scan
 │   └── screenshot.png           # Screenshot: TCP Connect
 ├── js/

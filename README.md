@@ -62,6 +62,9 @@ hub: true
 >![ダークモード・TCP SYNスキャン](assets/screenshot-dark.png)
 >*ダークモードで、TCP SYN（ハーフオープン）を再生したところ*
 
+>![OSのRFC準拠トグル](assets/screenshot-rfc.png)
+>*OSのTCPスタックを非準拠にすると、FINスキャンが開いていてもRST/ACKを返して判定できなくなるところ*
+
 ---
 
 ## ✨ 特徴
@@ -71,6 +74,7 @@ hub: true
 - スキャナーと標的のあいだのパケットの動きを、SVGアニメーションで1手順ずつ再生します。
 - 標的のポートの状態（開いている・閉じている）を切り替えて、同じ手法でも応答がどう変わるかを比べられます。
 - 各手法の概要・利点・欠点・必要な権限と、IDSでの検知されやすさ・回避の工夫を解説します。
+- OSのTCPスタックをRFC 793準拠・非準拠で切り替えて、非準拠（Windowsなど）だとFIN・NULL・Xmasが判定できなくなる様子を見られます。
 - 再生中は一時停止・再開ができ、OSの「視差効果を減らす」設定ではアニメーションを控えめにします。
 - 日本語・英語の切り替え、ライト・ダークのテーマ切り替えに対応します（選択は自動で保存されます）。
 
@@ -173,9 +177,11 @@ port-scan-visualizer/
 ├── assets/
 │   ├── en/
 │   │   ├── screenshot-dark.png  # 英語・ダークモードのスクリーンショット
+│   │   ├── screenshot-rfc.png   # 英語・RFC準拠トグルのスクリーンショット
 │   │   ├── screenshot-udp.png   # 英語・UDPスキャンのスクリーンショット
 │   │   └── screenshot.png       # 英語・TCP Connectのスクリーンショット
 │   ├── screenshot-dark.png      # ダークモードのスクリーンショット
+│   ├── screenshot-rfc.png       # RFC準拠トグルのスクリーンショット
 │   ├── screenshot-udp.png       # UDPスキャンのスクリーンショット
 │   └── screenshot.png           # TCP Connectのスクリーンショット
 ├── js/
