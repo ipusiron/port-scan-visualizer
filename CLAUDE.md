@@ -4,52 +4,54 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Port Scan Visualizer - Educational tool for visualizing different port scanning techniques (TCP Connect, TCP SYN, FIN, NULL, Xmas, UDP) with TCP flag animations and time-series packet flow. Part of "生成AIで作るセキュリティツール100" project (Day062).
+Port Scan Visualizer - an educational tool for comparing six port-scan methods (TCP Connect, TCP SYN, FIN, NULL, Xmas, UDP) with the same packet exchange and verdicts. It performs no real scanning; everything runs in the browser. Part of the "生成AIで作るセキュリティツール100" project (Day062).
 
 ## Architecture
 
-### Core Structure
-- **Frontend-only application** (no backend/build process)
-- Static HTML/CSS/JavaScript served directly via GitHub Pages
+### Core structure
+- Frontend-only application (no backend, no build step)
+- Static HTML/CSS/JavaScript served via GitHub Pages
 - No external dependencies or frameworks
-- CSP headers configured in `index.html:8-11`
+- CSP configured in `index.html` (`connect-src 'none'`, `object-src 'none'`); meta X-Frame-Options / X-Content-Type-Options are not used because they have no effect as meta elements
 
-### Data Model
-The `SCANS` object (`script.js:77-293`) defines all scan types with:
-- `name` - Display name
-- `proto` - Protocol (TCP/UDP)
-- `scenarios.open/closed` - Port state-specific packet sequences
-  - `frames[]` - Array of packet objects with `dir`, `proto`, `flags[]`, `desc`
-  - `judgement` - Result text (Open/Closed/Filtered)
-- `summary.pros/cons` - Educational bullet points
-- `ids` - IDS detection info (`detectability`, `signatures[]`, `evasion[]`, `comments`)
+### Files
+- `js/psv-core.js` - DOM-free core: the `SCANS` data (6 methods x open/closed frames and verdicts), `DETECTABILITY`, `TCP_FLAGS`, `validatePort()`, `packetLabel()`. Exposed as `globalThis.PsvCore` and tested with `node --test`.
+- `js/messages.js` - Japanese/English text dictionary and `t(key, vars, lang)`. Exposed as `globalThis.PsvMessages`.
+- `js/i18n.js` - language selection and static-text substitution (`data-i18n` / `data-i18n-attr`). `globalThis.PsvI18n`.
+- `js/theme.js`, `js/theme-init.js` - light/dark theme toggle and pre-render application. `globalThis.PsvTheme`.
+- `js/app.js` - screen logic only: scan selection, SVG packet animation, timeline, explanation and IDS rendering, help modal, language/theme wiring.
 
-### Key Functions
-- `animatePacket()` (`script.js:409-473`) - SVG packet animation between scanner/target
-- `animateSequence()` (`script.js:475-501`) - Orchestrates full scan animation
-- `renderTimeline()` (`script.js:515-523`) - Populates timeline list from frames
-- `renderIDSCommentary()` (`script.js:544-579`) - Displays IDS detection info
-- `sanitizeHTML()` (`script.js:36-40`) - XSS prevention for dynamic content
+### Data model
+Each entry in `SCANS` (`js/psv-core.js`) has:
+- `proto` - protocol (TCP/UDP)
+- `open` / `closed` - port-state scenarios, each `{ judgement, frames[] }`
+  - `frames[]` - packet objects with `dir` (`out`/`in`/`timeout`), `proto`, `flags[]`, optional `icmp`, and `descKey` (a dictionary key resolved by `messages.js`)
+  - `judgement` - `open` / `closed` / `openFiltered`
 
 ### Styling
-- Dark/light theme via CSS variables (`style.css:1-24`)
-- Flag colors defined in JS (`script.js:296-304`) and CSS outlines (`style.css:58-65`)
-- Theme persisted to localStorage
+- Light-default color tokens, overridden for dark under `@media (prefers-color-scheme: dark) :root:not([data-theme="light"])` and `:root[data-theme="dark"]`
+- TCP flag colors in CSS (`.flag[data-flag="…"]`); theme persisted to localStorage
 
-## Development Notes
+## Development notes
 
-### Running Locally
-Open `index.html` directly in browser or use any static server:
+### Running locally
+Open `index.html` directly in a browser, or use any static server:
 ```bash
 python -m http.server 8000
 ```
 
-### Adding a New Scan Type
-1. Add entry to `SCANS` object with `name`, `proto`, `scenarios`, `summary`, `ids`
-2. Add `<option>` to `#scanSelect` in `index.html:29-36`
-3. If new protocol, add flag styling in `style.css` and color in `flagColors`
+### Tests
+```bash
+npm test
+```
+Runs the core, HTML, messages, i18n, contrast, format and README checks. The same tests run on GitHub Actions (`.github/workflows/test.yml`).
 
-### Security Considerations
-- All user input sanitized via `sanitizeHTML()` before DOM insertion
-- Port input validated via `validatePort()` (`script.js:43-49`)
-- CSP prevents inline scripts and external connections
+### Adding a new scan method
+1. Add an entry to `SCANS` in `js/psv-core.js` (`proto`, `open`, `closed`), add its id to `SCAN_IDS`, and set its `DETECTABILITY`.
+2. Add the `scan.<id>.*` and any new `f.*` text to both `ja` and `en` in `js/messages.js`.
+3. If a new protocol or flag is involved, add its color in `style.css`.
+
+### Security considerations
+- On-screen text is built with DOM APIs (`textContent`, `createElement`); no `innerHTML` or template-string HTML.
+- Port input is validated via `validatePort()` in `js/psv-core.js` (integer in 1-65535).
+- CSP prevents inline scripts and external connections.

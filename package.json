@@ -1,0 +1,8 @@
+{
+  "name": "port-scan-visualizer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}

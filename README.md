@@ -2,22 +2,16 @@
 ---
 id: day062
 slug: port-scan-visualizer
-
 title: "Port Scan Visualizer"
-
 subtitle_ja: "ポートスキャン手法可視化ツール"
 subtitle_en: "Port Scanning Technique Visualizer"
-
-description_ja: "代表的なポートスキャン手法（TCP Connect / TCP SYN / FIN / NULL / Xmas / UDP）を、送受パケットの時系列とTCPフラグの違いにフォーカスして学べる教育用可視化ツール"
-description_en: "Educational visualization tool for learning major port scanning techniques with time-series packet flow and TCP flag animations"
-
+description_ja: "代表的な6種類のポートスキャン（TCP Connect / TCP SYN / FIN / NULL / Xmas / UDP）を、パケットの往来と判定をそろえて見比べて学べる学習用の可視化ツール"
+description_en: "An educational visualizer to compare six port-scan methods (TCP Connect / TCP SYN / FIN / NULL / Xmas / UDP) side by side, with the same packet exchange and verdicts"
 category_ja:
   - ネットワーク
 category_en:
   - Network
-
 difficulty: 2
-
 tags:
   - port-scan
   - tcp
@@ -25,14 +19,13 @@ tags:
   - nmap
   - visualization
   - education
-  - ids
-
 repo_url: "https://github.com/ipusiron/port-scan-visualizer"
 demo_url: "https://ipusiron.github.io/port-scan-visualizer/"
-
 hub: true
 ---
 -->
+
+[English](README.en.md) · 日本語
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/ipusiron/port-scan-visualizer?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/ipusiron/port-scan-visualizer?style=social)
@@ -44,13 +37,9 @@ hub: true
 
 # Port Scan Visualizer - ポートスキャン手法可視化ツール
 
-代表的なポートスキャン手法（**TCP Connect / TCP SYN / FIN / NULL / Xmas / UDP**）を、  
-**送受パケットの時系列**と**TCPフラグの違い**にフォーカスして学べる可視化ツールです。
+代表的な6種類のポートスキャン（**TCP Connect / TCP SYN / FIN / NULL / Xmas / UDP**）を、パケットの往来と判定をそろえて見比べて学べる学習用の可視化ツールです。
 
-直感的にパケットの流れを理解できるよう、アニメーションと解説を組み合わせています。
-セキュリティ入門者から中級者まで、ポートスキャンの仕組みや検知ポイントを学ぶ教材として活用できます。
-
-> ※このツールは学習目的の**疑似アニメーション**です。実ネットワークスキャンは実施しません。
+実際のスキャンはせず、すべてブラウザーの中のアニメーションで動きます。どのパケットが行き来して、なぜOpen・Closed・Open｜Filteredと判断するのかを、1手順ずつ目で追えます。
 
 ---
 
@@ -64,112 +53,180 @@ hub: true
 
 ## 📸 スクリーンショット
 
->![TCP SYNスキャンのデモ実行](assets/screenshot.png)  
->*TCP SYNスキャンのデモ実行*
+>![TCP Connectスキャン（Open）](assets/screenshot.png)
+>*TCP Connectスキャンで、開いているポートへの3ウェイハンドシェイクを再生したところ*
+
+>![UDPスキャン（Closed）](assets/screenshot-udp.png)
+>*UDPスキャンで、閉じているポートからICMP Port Unreachableが返るところ*
+
+>![ダークモード・TCP SYNスキャン](assets/screenshot-dark.png)
+>*ダークモードで、TCP SYN（ハーフオープン）を再生したところ*
 
 ---
 
 ## ✨ 特徴
 
-- **代表的な6種類のスキャン手法を完全網羅**  
-  TCP Connect（フルコネクト）/ TCP SYN（ハーフコネクト）/ FIN / NULL / Xmas / UDPの挙動を比較可能。  
-
-- **TCPフラグを色分けした直感的な可視化**  
-  SYN, ACK, FIN, PSH, URG, RSTを色別に強調表示し、フラグの組み合わせパターンが一目でわかる。  
-
-- **リアルタイムパケットアニメーション**  
-  スキャナー⇄ターゲット間のパケット移動をSVGアニメーションで再現。単一フラグは凡例と同色、複数フラグは区別色を使用。
-
-- **ポート状態による動的シナリオ切り替え**  
-  Open/Closedトグルで、同じスキャン手法でも異なる応答パターンを学習可能。  
-
-- **🛡️ IDS検知コメンタリー機能**  
-  各スキャン手法の検知性レベル（高/中/低）、検知シグネチャ、回避技術を専門家視点で解説。
-
-- **ダーク/ライトモード対応**  
-  🌙☀️ ワンクリック切り替えで、環境に合わせたテーマ選択が可能（設定自動保存）。
-
-- **アニメーション速度調整**  
-  0.2x〜2x の5段階でパケット送信速度を調整可能。初学者はスロー再生で詳細確認。
-
-- **完全なセキュリティ対応**  
-  CSP、XSS対策、入力検証を実装。GitHub Pages公開に適した安全設計。  
+- 6種類のスキャン手法に対応し、同じ画面でパケットの往来と判定を見比べられます。
+- TCPフラグ（SYN・ACK・FIN・PSH・URG・RST）を色分けして、フラグの組み合わせが一目でわかります。
+- スキャナーと標的のあいだのパケットの動きを、SVGアニメーションで1手順ずつ再生します。
+- 標的のポートの状態（開いている・閉じている）を切り替えて、同じ手法でも応答がどう変わるかを比べられます。
+- 各手法の概要・利点・欠点・必要な権限と、IDSでの検知されやすさ・回避の工夫を解説します。
+- 日本語・英語の切り替え、ライト・ダークのテーマ切り替えに対応します（選択は自動で保存されます）。
 
 ---
 
-## 🎯 活用シナリオ
+## 📖 使い方
 
-### セキュリティ研修や授業での教材
+1. スキャン手法を選びます。
+2. 標的のポートの状態（開いている・閉じている）を切り替えます。
+3. 「再生」を押すと、パケットの往来がアニメーションで流れます。
+4. 時系列・解説・IDSでの検知で、なぜその判定になるかを確認します。
 
-「SYNスキャンとConnectスキャンの違いは？」といった座学を説明するときに、アニメーションでTCPフラグの動きを見せることで直感的に理解できます。
-
-学生や新人エンジニアが、紙の図解だけでは掴みにくい「フラグの違いによる応答の差」を即座に把握できます。
-
-### インシデント対応チームの勉強会
-
-IDS/IPSのログに「FINフラグを伴う通信」などが出た際に、どのスキャンに該当するのかを可視化して確認できます。
-
-実際のトラフィックを流さなくても、疑似アニメーションで「なぜ検知されたか」を共有でき、認識合わせに役立ちます。  
+ポート番号は`1〜65535`の整数を指定できます。範囲外や数でない入力は、確定のときにエラーで知らせます。
 
 ---
 
-## 🔧 技術解説
+## 🔍 6種類のスキャン手法
 
-本ツールで扱う各種スキャン手法（TCP Connect / TCP SYN / FIN / NULL / Xmas / UDP）の技術的な仕組みやnmap/RustScanによる実行例は、以下の専用ドキュメントにまとめています。
+| 手法 | 送るパケット | 開いているとき | 閉じているとき | 特権 |
+|------|------|------|------|------|
+| TCP Connect | SYN（`connect()`で完全に接続） | SYN/ACK → Open | RST/ACK → Closed | 不要 |
+| TCP SYN | SYN（握手を完了しない） | SYN/ACK → Open（RSTで中断） | RST/ACK → Closed | 必要 |
+| FIN | FIN | 無応答 → Open｜Filtered | RST/ACK → Closed | 必要 |
+| NULL | フラグなし | 無応答 → Open｜Filtered | RST/ACK → Closed | 必要 |
+| Xmas | FIN+PSH+URG | 無応答 → Open｜Filtered | RST/ACK → Closed | 必要 |
+| UDP | UDPデータグラム | 無応答 → Open｜Filtered | ICMP Port Unreachable（type 3, code 3） → Closed | 必要 |
 
-➡️ [SCANS.md](./SCANS.md)
+各手法の仕組みと、nmap・RustScanでの実行例は[SCANS.md](./SCANS.md)にまとめています。
 
 ---
 
-## 📁 ディレクトリー構成
+## 🛡️ IDSでの検知
+
+- 検知されやすさを高・中・低で示します。TCP Connectは接続を確立するため最も記録に残りやすく、FIN・NULL・UDPは残りにくい手法です。
+- TCP SYNは歴史的に「ステルス」と呼ばれますが、現代のIDS/IPSでは半開の接続も検知されます（ステルスは歴史的な呼称です）。
+- デコイ・送信レートの調整・パケットの断片化といった回避の工夫も、手法と一体で解説します。
+
+---
+
+## 🎯 ユースケース
+
+- セキュリティの研修や授業で、SYNスキャンとConnectスキャンの違いをアニメーションで見せる。
+- IDS/IPSのログにFINなどの変則パケットが出たとき、どの手法に当たるかを可視化して共有する。
+- 新人エンジニアが、紙の図では掴みにくいフラグの違いによる応答の差を目で確かめる。
+
+---
+
+## 🔬 技術的な説明
+
+- 3ウェイハンドシェイクと各パケットの往来はRFC 9293に沿っています。閉じているポートの応答は、RSTだけでなくACKも立つRST/ACKです。
+- FIN・NULL・XmasはRFC 793に準拠したスタックでのみ機能します。Windows・一部Cisco・BSDI・OS/400などは開閉に関係なくRSTを返すため、これらの手法では判定できません。
+- UDPの閉じているポートはICMP Port Unreachable（type 3, code 3）を返します。開いているポートは無応答が多く、Open｜Filteredと判断します。
+- 計算部（パケットの往来・判定・ポート検証）を`js/psv-core.js`に分け、`node --test`で検証しています。
+
+---
+
+## 🔒 セキュリティ
+
+- 外部との通信をせず、スクリプト・スタイルを同じ場所のファイルだけに限るCSPを設定しています（`connect-src 'none'`・`object-src 'none'`）。
+- 画面の文字はDOMのAPIで組み立て、`innerHTML`やテンプレート文字列でHTMLを作りません。
+- meta要素のX-Frame-OptionsやX-Content-Type-Optionsは効かないため置いていません（クリックジャッキング対策はGitHub Pagesのmetaでは付けられません）。
+
+---
+
+## ⚠️ 注意と限界
+
+- これは学習用のシミュレーションで、実際のスキャンはしません。許可のないポートスキャンは、法律や規約で禁じられている場合があります。
+- 実装やネットワークの状態によって、現実の応答は本ツールの図と異なることがあります。
+- ファイアウォールでのドロップ（Filtered）や、実機のパケットのビットまでは扱っていません。
+
+---
+
+## 🧪 テスト
+
+計算部・HTML・文言・配色・書式をまとめて検証します。
+
+```bash
+npm test
+```
+
+GitHub Actions（`.github/workflows/test.yml`）でも同じテストが走ります。
+
+---
+
+## 🔗 参考文献
+
+- [nmap: Port Scanning Techniques](https://nmap.org/book/man-port-scanning-techniques.html)
+- RFC 9293（TCP）, RFC 792（ICMP）
+- [『ハッキング・ラボのつくりかた 完全版』](https://akademeia.info/?page_id=35502)…「Nmapの代表的なスキャン」（P.440-454）
+
+---
+
+## 📁 ディレクトリー構造
 
 ```text
 port-scan-visualizer/
-├── .claude/
-│   └── settings.local.json      # Claude Code設定
-├── .git/                        # Git管理ファイル
+├── .github/
+│   └── workflows/
+│       └── test.yml             # テストを走らせるGitHub Actions
 ├── assets/
-│   └── screenshot.png           # スクリーンショット画像
-├── .gitignore                   # Git除外設定
-├── .nojekyll                    # GitHub Pages設定
-├── CLAUDE.md                    # Claude Code プロジェクト設定
-├── index.html                   # メインHTMLファイル
+│   ├── en/
+│   │   ├── screenshot-dark.png  # 英語・ダークモードのスクリーンショット
+│   │   ├── screenshot-udp.png   # 英語・UDPスキャンのスクリーンショット
+│   │   └── screenshot.png       # 英語・TCP Connectのスクリーンショット
+│   ├── screenshot-dark.png      # ダークモードのスクリーンショット
+│   ├── screenshot-udp.png       # UDPスキャンのスクリーンショット
+│   └── screenshot.png           # TCP Connectのスクリーンショット
+├── js/
+│   ├── app.js                   # 画面の処理（DOMとアニメーション）
+│   ├── i18n.js                  # 言語の選択と静的な文言の差し替え
+│   ├── messages.js              # 日本語・英語の文言の辞書
+│   ├── psv-core.js              # 計算部（パケットの往来・判定・ポート検証）
+│   ├── theme-init.js            # 描画前にテーマを当てる
+│   └── theme.js                 # ライト・ダークの切り替え
+├── test/
+│   ├── contrast.test.js         # 配色のコントラストの検査
+│   ├── core.test.js             # 計算部の検査
+│   ├── format.test.js           # 書式（行長・改行・末尾）の検査
+│   ├── html.test.js             # HTML（CSP・aria・辞書との一致）の検査
+│   ├── i18n.test.js             # 言語の判定の検査
+│   ├── load.js                  # テストにスクリプトを読み込む補助
+│   ├── messages.test.js         # 文言（日英の一致・一次資料）の検査
+│   └── readme.test.js           # READMEの検査
+├── .gitignore                   # Gitの除外設定
+├── .nojekyll                    # GitHub PagesでJekyllを無効化
+├── CLAUDE.md                    # Claude Code向けのプロジェクト設定
 ├── LICENSE                      # MITライセンス
-├── README.md                    # プロジェクト説明書
-├── SCANS.md                     # 技術解説ドキュメント
-├── script.js                    # メインJavaScriptロジック
+├── README.en.md                 # 英語版README
+├── README.md                    # このファイル
+├── SCANS.md                     # 各スキャン手法の技術解説
+├── TODO.md                      # 今後の改善メモ
+├── index.html                   # メインのHTML
+├── package.json                 # テストの定義
 └── style.css                    # スタイルシート
 ```
 
-### 主要ファイルの役割
+---
 
-- **index.html**: アプリケーションのUI構造、セキュリティヘッダー、テーマ切り替えボタン
-- **script.js**: スキャン手法定義、SVGアニメーション、IDS検知ロジック、テーマ管理
-- **style.css**: ダーク/ライトモードのスタイリング、レスポンシブデザイン、視覚効果
-- **SCANS.md**: 各スキャン手法の技術詳細とnmap/RustScan実行例
-- **CLAUDE.md**: AI開発支援用のプロジェクト設定とアーキテクチャ情報
+## 💻 動作環境
 
-----
-
-## 📚 関連資料・リソース
-
-### 書籍（私が関わったもの）
-
-- [『ハッキング・ラボのつくりかた 完全版』](https://akademeia.info/?page_id=35502)…「Nmapの代表的なスキャン」（P.440-454）
+- モダンなブラウザー（Chrome・Edge・Firefox・Safari）で動きます。
+- インストールやビルドは不要です。`index.html`を開くか、静的サーバーで配信してください。
+- テストの実行にはNode.js 18以上が必要です。
 
 ---
 
 ## 📄 ライセンス
 
-MIT License – 詳細は [LICENSE](LICENSE) を参照してください。
+MIT License - 詳細は[LICENSE](LICENSE)を参照してください。
 
 ---
 
 ## 🛠 このツールについて
 
-本ツールは、「生成AIで作るセキュリティツール100」プロジェクトの一環として開発されました。 
+本ツールは、「生成AIで作るセキュリティツール100」プロジェクトの一環として開発されました。
 このプロジェクトでは、AIの支援を活用しながら、セキュリティに関連するさまざまなツールを100日間にわたり制作・公開していく取り組みを行っています。
 
-プロジェクトの詳細や他のツールについては、以下のページをご覧ください。  
+プロジェクトの詳細や他のツールについては、以下のページをご覧ください。
 
 🔗 [https://akademeia.info/?page_id=42163](https://akademeia.info/?page_id=42163)

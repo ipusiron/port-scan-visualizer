@@ -10,7 +10,7 @@
 ## 前提
 - **ポート状態の判定**（一般的な目安）  
   - **Open**：接続/応答がそのサービス特有の形で返る  
-  - **Closed**：RST（TCP）や ICMP Port Unreachable（UDP）  
+  - **Closed**：RST/ACK（TCP）や ICMP Port Unreachable（type 3, code 3）（UDP）  
   - **Filtered/Unknown**：ファイアウォールなどで無応答・フィルタリング
 - **権限**  
   - `-sS`（SYN）など一部のスキャンは **原則 root/管理者権限** が必要。
@@ -27,7 +27,7 @@
 ```
 Scanner → Target : SYN
 Scanner ← Target : SYN/ACK → Open 判定（以降 ACK で接続成立、直後に FIN/RST で終了）
-Scanner ← Target : RST → Closed 判定
+Scanner ← Target : RST/ACK → Closed 判定
 ```
 
 ### 特徴
@@ -91,12 +91,13 @@ sudo rustscan -a example.com -- -sS -sV
 
 ### 仕組み
 
-- FIN フラグのみ送信。TCP仕様上、Closed ポートは RST を返すのが一般的。
+- FIN フラグのみ送信。RFC 793 準拠のスタックは、Closed で RST/ACK、Open で無応答を返す。
+- RFC 793 に準拠しないスタック（Windows・一部Cisco・BSDI・OS/400 など）は、開閉に関係なく RST/ACK を返すため判定できない。
 - Open ポートは 黙殺（無応答）する実装が多いとされる（実装依存）。
 
 ```
 Scanner → Target : FIN
-Scanner ← Target : RST       → Closed
+Scanner ← Target : RST/ACK   → Closed
 （無応答なら）               → Open 推定（または Filtered）
 ```
 
@@ -124,11 +125,11 @@ sudo rustscan -a example.com -- -sF
 ### 仕組み
 
 - フラグなし（000000）のTCPパケットを送信。
-- ClosedはRST、Openは無応答とされることが多い（実装依存）。
+- RFC 793 準拠のスタックは Closed で RST/ACK、Open で無応答。RFC 793 に準拠しないスタック（Windows など）は開閉に関係なく RST/ACK を返すため判定できない。
 
 ```
 Scanner → Target : FLAGS=NULL
-Scanner ← Target : RST       → Closed
+Scanner ← Target : RST/ACK   → Closed
 （無応答なら）               → Open 推定（または Filtered）
 ```
 
@@ -150,16 +151,16 @@ sudo nmap -sN -p 1-1024 example.com
 sudo rustscan -a example.com -- -sN
 ```
 
-## Xmasスキャン
+## 5) Xmasスキャン
 
 ### 仕組み
 
 - FIN + PSH + URG を 点灯（Xmasツリー） させて送信。
-- Closed は RST、Open は 無応答 とされることが多い（実装依存）。
+- RFC 793 準拠のスタックは Closed で RST/ACK、Open は無応答。RFC 793 に準拠しないスタック（Windows など）は開閉に関係なく RST/ACK を返すため判定できない。
 
 ```
 Scanner → Target : FIN+PSH+URG
-Scanner ← Target : RST       → Closed
+Scanner ← Target : RST/ACK   → Closed
 （無応答なら）               → Open/Filtered 推定
 ```
 
@@ -181,11 +182,11 @@ sudo nmap -sX -p 1-2000 example.com
 sudo rustscan -a example.com -- -sX
 ```
 
-## UDPスキャン
+## 6) UDPスキャン
 
 ### 仕組み
 
-- UDPはコネクションレスかつフラグ無し。多くのClosedはICMP Port Unreachable を返す。
+- UDPはコネクションレスかつフラグ無し。多くのClosedはICMP Port Unreachable（type 3, code 3）を返す。
 - Openは無応答の場合が多く（サービスによっては応答）、ICMP遮断下では Unknown が増える。
 
 ```

@@ -2,76 +2,93 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+  <meta name="referrer" content="no-referrer" />
   <title>Port Scan Visualizer</title>
-  <meta name="description" content="Learn TCP/UDP port scan methods with flag-focused animations." />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none';" />
-  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-  <meta http-equiv="X-Frame-Options" content="DENY" />
-  <meta http-equiv="Referrer-Policy" content="no-referrer" />
-  <link rel="stylesheet" href="./style.css" />
+  <meta name="description" content="6種類のポートスキャン（TCP Connect・TCP SYN・FIN・NULL・Xmas・UDP）のパケットの往来と判定を、ブラウザーの中で見比べて学ぶ学習用ツール" />
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="style.css" />
+  <script src="js/theme-init.js"></script>
 </head>
 <body>
   <header class="site-header">
-    <h1>Port Scan Visualizer</h1>
-    <p class="subtitle">各種ポートスキャン手法の違いを、フラグ表示で直感理解できるツールです</p>
+    <div class="header-text">
+      <h1>Port Scan Visualizer</h1>
+      <p class="subtitle" data-i18n="ui.subtitle">6種類のポートスキャンを、<strong>パケットのフラグ</strong>と<strong>判定</strong>をそろえて見比べる学習用ツールです</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" id="btn-help" class="header-btn" data-i18n="ui.help" data-i18n-attr="aria-label:ui.helpLabel" aria-label="ヘルプを開く">❓ ヘルプ</button>
+      <button type="button" id="btn-lang" class="header-btn" data-i18n="ui.langButton" data-i18n-attr="aria-label:ui.langLabel" aria-label="Switch to English">English</button>
+      <button type="button" id="btn-theme" class="header-btn" aria-label="ダークモードに切り替える">🌙</button>
+    </div>
   </header>
 
-  <!-- Theme Toggle Button -->
-  <button id="themeToggle" class="theme-toggle" aria-label="テーマ切り替え">
-    <span class="theme-icon">🌙</span>
-  </button>
+  <noscript><p class="noscript" data-i18n="ui.noscript">このページはJavaScriptで動きます。JavaScriptを有効にしてから開き直してください。</p></noscript>
 
   <main class="container">
-    <!-- Controls -->
-    <section class="panel controls">
-      <label for="scanSelect">スキャン種類：</label>
-      <select id="scanSelect" aria-label="scan type">
-        <option value="tcp-connect">TCP Connect（フルコネクト）</option>
-        <option value="tcp-syn">TCP SYN（ハーフコネクト）</option>
-        <option value="fin">FIN</option>
-        <option value="null">NULL</option>
-        <option value="xmas">Xmas（FIN+PSH+URG）</option>
-        <option value="udp">UDP</option>
-      </select>
-
-      <label for="portInput">Port：</label>
-      <input id="portInput" type="number" min="1" max="65535" value="80" />
-
-      <label for="speedControl">速度：</label>
-      <select id="speedControl" aria-label="animation speed">
-        <option value="0.5">0.2x</option>
-        <option value="0.5">0.5x</option>
-        <option value="1" selected>1x（標準）</option>
-        <option value="1.5">1.5x</option>
-        <option value="2">2x</option>
-      </select>
-
-      <button id="playBtn" class="btn">▶ 再生</button>
-      <button id="resetBtn" class="btn btn-ghost">⟲ リセット</button>
+    <!-- 設定 -->
+    <section class="panel">
+      <h2 data-i18n="ctl.title">スキャンの設定</h2>
+      <div class="controls">
+        <div class="field">
+          <label for="scanSelect" data-i18n="ctl.scan">スキャン手法</label>
+          <select id="scanSelect"></select>
+        </div>
+        <div class="field">
+          <label for="portInput" data-i18n="ctl.port">ポート番号</label>
+          <input id="portInput" type="number" min="1" max="65535" value="80" inputmode="numeric" aria-describedby="portHint portError" />
+          <small id="portHint" data-i18n="ctl.portHint">標的のポート番号。1〜65535</small>
+          <p id="portError" class="field-error" role="alert" hidden data-i18n="ctl.portError">ポート番号は1〜65535の整数にしてください。</p>
+        </div>
+        <div class="field">
+          <label for="speedControl" data-i18n="ctl.speed">アニメーションの速度</label>
+          <select id="speedControl">
+            <option value="0.2">0.2x</option>
+            <option value="0.5">0.5x</option>
+            <option value="1" selected>1x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+          </select>
+        </div>
+        <div class="field">
+          <span class="field-label" id="stateToggleLabel" data-i18n="ctl.state">標的のポートの状態</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="portStateToggle" checked aria-labelledby="stateToggleLabel" />
+            <span class="toggle-slider" aria-hidden="true"></span>
+            <span class="state-label" id="stateLabel" data-i18n="ctl.stateOpen">開いている</span>
+          </label>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" id="playBtn" class="primary-btn" data-i18n="ctl.play">▶ 再生</button>
+        <button type="button" id="resetBtn" class="ghost-btn" data-i18n="ctl.reset">⟲ リセット</button>
+      </div>
     </section>
 
-    <!-- Visualization area (skeleton only) -->
+    <!-- 可視化 -->
     <section class="panel viz">
       <div class="node scanner">
-        <div class="node-title">Scanner</div>
-        <div class="flag-legend-label" id="legendLabel">TCPフラグ凡例:</div>
-        <div class="flag-legend" id="tcpLegend">
-          <span class="flag syn" data-flag="SYN">SYN</span>
-          <span class="flag ack" data-flag="ACK">ACK</span>
-          <span class="flag fin" data-flag="FIN">FIN</span>
-          <span class="flag psh" data-flag="PSH">PSH</span>
-          <span class="flag urg" data-flag="URG">URG</span>
-          <span class="flag rst" data-flag="RST">RST</span>
-        </div>
-        <div class="flag-legend" id="udpLegend" style="display:none">
-          <span class="flag udp">UDP</span>
-          <span class="flag icmp">ICMP</span>
+        <div class="node-title" data-i18n="node.scanner">スキャナー</div>
+        <div class="legend">
+          <span class="legend-label" id="legendLabel" data-i18n="node.legendTcp">TCPフラグ</span>
+          <div class="flag-legend" id="tcpLegend">
+            <span class="flag" data-flag="SYN">SYN</span>
+            <span class="flag" data-flag="ACK">ACK</span>
+            <span class="flag" data-flag="FIN">FIN</span>
+            <span class="flag" data-flag="PSH">PSH</span>
+            <span class="flag" data-flag="URG">URG</span>
+            <span class="flag" data-flag="RST">RST</span>
+          </div>
+          <div class="flag-legend" id="protoLegend" hidden>
+            <span class="flag" data-flag="UDP">UDP</span>
+            <span class="flag" data-flag="ICMP">ICMP</span>
+          </div>
         </div>
       </div>
 
       <div class="path">
-        <svg class="packet-animation" viewBox="0 0 500 100">
+        <svg class="packet-animation" viewBox="0 0 500 120" role="img" aria-label="packet exchange">
           <defs>
             <marker id="arrowhead-out" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
               <polygon points="0 0, 10 3, 0 6" fill="var(--accent)" />
@@ -80,63 +97,61 @@
               <polygon points="10 0, 0 3, 10 6" fill="var(--good)" />
             </marker>
           </defs>
-          
-          <!-- Base paths -->
-          <path id="path-out" d="M 50 50 L 450 50" stroke="var(--border)" stroke-width="2" fill="none" marker-end="url(#arrowhead-out)" opacity="0.3" />
-          <path id="path-in" d="M 450 50 L 50 50" stroke="var(--border)" stroke-width="2" fill="none" marker-end="url(#arrowhead-in)" opacity="0.3" />
-          
-          <!-- Animated packet group -->
-          <g id="packet-group" class="packet-group" opacity="0">
-            <rect class="packet-box" x="-20" y="-12" width="40" height="24" rx="6" fill="var(--accent)" stroke="var(--border)" />
-            <text class="packet-flags" x="0" y="0" text-anchor="middle" dominant-baseline="middle" fill="var(--text)" font-size="10" font-weight="600">SYN</text>
+          <line id="path-out" x1="40" y1="40" x2="460" y2="40" stroke="var(--border)" stroke-width="2" marker-end="url(#arrowhead-out)" opacity="0.35" />
+          <line id="path-in" x1="460" y1="80" x2="40" y2="80" stroke="var(--border)" stroke-width="2" marker-end="url(#arrowhead-in)" opacity="0.35" />
+          <g id="packet-group" opacity="0">
+            <rect id="packet-box" x="-24" y="-13" width="48" height="26" rx="6" fill="var(--accent)" stroke="var(--border)" />
+            <text id="packet-flags" x="0" y="1" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="11" font-weight="700">SYN</text>
           </g>
         </svg>
       </div>
 
       <div class="node target">
-        <div class="node-title">Target : <span id="portLabel">80</span>/tcp|udp</div>
-        <div class="port-state-toggle">
-          <label class="toggle-switch">
-            <input type="checkbox" id="portStateToggle" checked>
-            <span class="toggle-slider"></span>
-            <span class="state-label" id="stateLabel">Open</span>
-          </label>
-        </div>
-        <div id="judgementBadge" class="judge-badge">–</div>
+        <div class="node-title"><span data-i18n="node.target">標的</span>：<span id="portLabel">80</span>/<span id="protoLabel">tcp</span></div>
+        <div id="judgementBadge" class="judge-badge" data-judge="pending" aria-live="polite" data-i18n="judge.pending">判定前</div>
       </div>
     </section>
 
-    <!-- Timeline & Explanation -->
+    <!-- 時系列・解説 -->
     <section class="grid-2">
-      <div class="panel timeline">
-        <h2>時系列</h2>
-        <ol id="timelineList" class="timeline-list">
-        </ol>
+      <div class="panel">
+        <h2 data-i18n="sec.timeline">時系列</h2>
+        <ol id="timelineList" class="timeline-list" aria-live="polite"></ol>
       </div>
-
-      <div class="panel explain">
-        <h2>解説</h2>
-        <div id="explainBox" class="explain-box">
-        </div>
+      <div class="panel">
+        <h2 data-i18n="sec.explain">解説</h2>
+        <div id="explainBox" class="explain-box"></div>
       </div>
     </section>
 
-    <!-- IDS Detection Commentary -->
-    <section class="panel ids-detection">
-      <h2>🛡️ IDS検知コメンタリー</h2>
-      <div id="idsCommentary" class="ids-commentary">
-      </div>
+    <!-- IDS -->
+    <section class="panel">
+      <h2 data-i18n="sec.ids">IDSでの検知</h2>
+      <div id="idsCommentary" class="ids-commentary"></div>
     </section>
+
+    <p class="warning" data-i18n="ui.warning">このツールはブラウザーの中だけで動く学習用のシミュレーションです。実際のスキャンはしません。許可のないポートスキャンは法律や規約で禁じられている場合があります。</p>
   </main>
 
-  <footer>
-    <div class="footer">
-      🔗 GitHubリポジトリはこちら（
-      <a href="https://github.com/ipusiron/port-scan-visualizer" target="_blank">ipusiron/port-scan-visualizer</a>
-      ）
-    </div>
+  <footer class="site-footer">
+    🔗 <a href="https://github.com/ipusiron/port-scan-visualizer" target="_blank" rel="noopener noreferrer" data-i18n="ui.repo">GitHubリポジトリー（ipusiron/port-scan-visualizer）</a>
   </footer>
 
-  <script src="./script.js"></script>
+  <!-- ヘルプのモーダル -->
+  <div id="helpModal" class="modal" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="modal-head">
+        <h2 id="helpTitle" data-i18n="help.title">このツールについて</h2>
+        <button type="button" id="closeModal" class="icon-btn" aria-label="閉じる">✕</button>
+      </div>
+      <div id="helpBody" class="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="js/psv-core.js"></script>
+  <script src="js/messages.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
