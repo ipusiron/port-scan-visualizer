@@ -25,7 +25,8 @@
     'ctl.stateOpen': '開いている',
     'ctl.stateClosed': '閉じている',
     'ctl.play': '▶ 再生',
-    'ctl.pause': '⏸ 停止',
+    'ctl.pause': '⏸ 一時停止',
+    'ctl.resume': '▶ 再開',
     'ctl.reset': '⟲ リセット',
 
     'node.scanner': 'スキャナー',
@@ -155,7 +156,8 @@
     'ctl.stateOpen': 'Open',
     'ctl.stateClosed': 'Closed',
     'ctl.play': '▶ Play',
-    'ctl.pause': '⏸ Stop',
+    'ctl.pause': '⏸ Pause',
+    'ctl.resume': '▶ Resume',
     'ctl.reset': '⟲ Reset',
 
     'node.scanner': 'Scanner',

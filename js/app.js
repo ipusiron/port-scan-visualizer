@@ -14,7 +14,20 @@
 
   let runId = 0;      // 再生のたびに増やす。古い rAF はこれで無効にする
   let playing = false;
+  let paused = false;
+  let pauseStart = 0;
+  let pausedAccum = 0; // この再生で一時停止していた合計ミリ秒
   let lastValidPort = C.DEFAULT_PORT;
+
+  // OS で「視差効果を減らす」を選んでいるときは、パケットを動かさず着地点に置く
+  const reduceMotion = () => {
+    try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; }
+  };
+  // 一時停止の分を差し引いた、フレーム開始からの経過（basePaused はフレーム開始時点の pausedAccum）
+  function elapsed(start, basePaused) {
+    const live = pausedAccum + (paused ? performance.now() - pauseStart : 0);
+    return performance.now() - start - (live - basePaused);
+  }
 
   // 太字（**）・インラインコード（`）・改行（\n）を要素で組み立てる（HTML としては解釈しない）
   function rich(el, text) {
@@ -138,8 +151,10 @@
       const g = $('packet-group');
       const box = $('packet-box');
       const label = $('packet-flags');
-      const dur = frameDuration();
       const start = performance.now();
+      const basePaused = pausedAccum;
+      const motion = !reduceMotion();
+      const dur = motion ? frameDuration() : Math.min(frameDuration(), 500); // 動かさないときは待ちも短く
 
       if (frame.dir === 'timeout') {
         // 無応答は、中央に淡く「✕」を置いて間を取る（パケットは動かさない）
@@ -150,7 +165,7 @@
         g.setAttribute('opacity', '0.5');
         const tick = () => {
           if (myRun !== runId) { g.setAttribute('opacity', '0'); return resolve(); }
-          if (performance.now() - start >= dur) { g.setAttribute('opacity', '0'); return resolve(); }
+          if (elapsed(start, basePaused) >= dur) { g.setAttribute('opacity', '0'); return resolve(); }
           requestAnimationFrame(tick);
         };
         requestAnimationFrame(tick);
@@ -165,10 +180,11 @@
       label.setAttribute('fill', '#fff');
       box.setAttribute('fill', packetColor(frame));
       g.setAttribute('opacity', '1');
-      const tick = (now) => {
+      if (!motion) g.setAttribute('transform', `translate(${to},${y})`); // 動かさないときは着地点に置く
+      const tick = () => {
         if (myRun !== runId) { g.setAttribute('opacity', '0'); return resolve(); }
-        const p = Math.min(1, (now - start) / dur);
-        g.setAttribute('transform', `translate(${from + (to - from) * p},${y})`);
+        const p = Math.min(1, elapsed(start, basePaused) / dur);
+        if (motion) g.setAttribute('transform', `translate(${from + (to - from) * p},${y})`);
         if (p >= 1) { g.setAttribute('opacity', '0'); return resolve(); }
         requestAnimationFrame(tick);
       };
@@ -179,30 +195,42 @@
   function gap(myRun) {
     return new Promise((resolve) => {
       const start = performance.now();
-      const d = frameDuration() * 0.25;
+      const basePaused = pausedAccum;
+      const base = reduceMotion() ? Math.min(frameDuration(), 500) : frameDuration();
+      const d = base * 0.25;
       const tick = () => {
-        if (myRun !== runId || performance.now() - start >= d) return resolve();
+        if (myRun !== runId || elapsed(start, basePaused) >= d) return resolve();
         requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
     });
   }
 
+  // 再生ボタンの表示: 停止中＝再生、再生中＝一時停止、一時停止中＝再開
+  function updatePlayLabel() {
+    const btn = $('playBtn');
+    if (!playing) { btn.textContent = t('ctl.play'); btn.setAttribute('aria-pressed', 'false'); return; }
+    btn.textContent = t(paused ? 'ctl.resume' : 'ctl.pause');
+    btn.setAttribute('aria-pressed', paused ? 'false' : 'true');
+  }
+
   function stopState() {
     playing = false;
-    $('playBtn').textContent = t('ctl.play');
-    $('playBtn').setAttribute('aria-pressed', 'false');
+    paused = false;
+    updatePlayLabel();
     $('packet-group').setAttribute('opacity', '0');
   }
 
-  // 停止（本人が再生中に押した）。runId を進めてループを無効にし、判定は出さない
-  function stop() {
-    runId++;
-    stopState();
+  // 再生中に押されたら一時停止・再開を切り替える（止めていた時間は elapsed から差し引く）
+  function togglePause() {
+    if (!playing) return;
+    paused = !paused;
+    if (paused) pauseStart = performance.now();
+    else pausedAccum += performance.now() - pauseStart;
+    updatePlayLabel();
   }
 
   async function play() {
-    if (playing) { stop(); return; }
     if (!validatePortField(true)) { $('portInput').focus(); return; }
     const id = currentScan();
     const state = currentState();
@@ -210,9 +238,10 @@
     clearTimeline();
     setBadge('pending');
     playing = true;
+    paused = false;
+    pausedAccum = 0;
     const myRun = ++runId;
-    $('playBtn').textContent = t('ctl.pause');
-    $('playBtn').setAttribute('aria-pressed', 'true');
+    updatePlayLabel();
     for (let i = 0; i < frames.length; i++) {
       if (myRun !== runId) break;
       addTimeline(frames[i]);
@@ -226,11 +255,13 @@
     }
   }
 
+  // リセットは停止も兼ねる（runId を進めてループを無効にし、最初の状態へ戻す）
   function reset() {
     runId++;
     playing = false;
-    $('playBtn').textContent = t('ctl.play');
-    $('playBtn').setAttribute('aria-pressed', 'false');
+    paused = false;
+    pausedAccum = 0;
+    updatePlayLabel();
     $('packet-group').setAttribute('opacity', '0');
     setBadge('pending');
     renderEmptyTimeline();
@@ -362,6 +393,7 @@
       reset();
     } else {
       setBadge($('judgementBadge').dataset.judge || 'pending');
+      updatePlayLabel();
     }
   }
 
@@ -385,7 +417,7 @@
     $('portStateToggle').addEventListener('change', onStateChange);
     $('portInput').addEventListener('blur', () => validatePortField(true));
     $('speedControl').addEventListener('change', () => {});
-    $('playBtn').addEventListener('click', play);
+    $('playBtn').addEventListener('click', () => { if (playing) togglePause(); else play(); });
     $('resetBtn').addEventListener('click', reset);
     $('btn-theme').addEventListener('click', () => Theme.toggle($('btn-theme')));
     $('btn-lang').addEventListener('click', () => {

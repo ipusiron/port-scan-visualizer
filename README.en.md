@@ -44,6 +44,7 @@ You can try it directly in your browser.
 - Animates the packet movement between the scanner and the target, one step at a time, with SVG.
 - Lets you toggle the target port state (open / closed) to compare how the same method responds.
 - Explains each method's overview, strengths, weaknesses and privilege, plus IDS detectability and evasion tricks.
+- Lets you pause and resume playback, and respects the OS "reduce motion" setting by toning down the animation.
 - Switches between Japanese and English, and between light and dark themes (your choice is saved automatically).
 
 ---

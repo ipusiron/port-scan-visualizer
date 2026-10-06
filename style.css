@@ -363,3 +363,8 @@ code {
   .site-header { align-items: stretch; }
   .header-actions { justify-content: flex-start; }
 }
+
+/* ===== 視差効果を減らす設定 ===== */
+@media (prefers-reduced-motion: reduce) {
+  .toggle-slider, .toggle-slider::after { transition: none; }
+}
