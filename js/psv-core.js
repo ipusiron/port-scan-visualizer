@@ -10,7 +10,8 @@
   // 判定の種類（表示文言は messages の judge.* ）
   const JUDGE = { open: 'open', closed: 'closed', openFiltered: 'openFiltered' };
 
-  // パケット1つ: dir（out スキャナー→標的、in 標的→スキャナー、timeout 無応答）、proto、flags（TCP）、icmp（ICMP の type/code）、descKey（説明の辞書キー）
+  // パケット1つ: dir（out スキャナー→標的、in 標的→スキャナー、timeout 無応答）、proto、flags（TCP）
+  //   icmp（ICMP の type/code）、descKey（説明の辞書キー）
   // 各手法の open/closed のフレーム列と判定。SCANS[id].proto はこの手法が使う主なプロトコル
   const SCANS = {
     'tcp-connect': {
@@ -128,10 +129,13 @@
   // TCP フラグの一覧（凡例の順）と色（CSS のトークンに対応）。色は画面でも使う
   const TCP_FLAGS = ['SYN', 'ACK', 'FIN', 'PSH', 'URG', 'RST'];
 
-  // ポート番号を 1〜65535 で確かめる。範囲外や数でないときは { ok:false }（画面は打ち直せるように、確定のときだけ既定へ戻す）
+  // ポート番号を 1〜65535 で確かめる。範囲外や数でないときは { ok:false }
+  // （画面は打ち直せるように、確定のときだけ既定へ戻す）
   function validatePort(value) {
-    const n = Number.parseInt(String(value).trim(), 10);
-    if (!Number.isInteger(n) || String(n) !== String(value).trim() || n < 1 || n > 65535) return { ok: false, value: n };
+    const s = String(value).trim();
+    const n = Number.parseInt(s, 10);
+    // 整数で、入力そのものが整数表記（先頭0や小数・指数を弾く）で、範囲内のときだけ通す
+    if (!Number.isInteger(n) || String(n) !== s || n < 1 || n > 65535) return { ok: false, value: n };
     return { ok: true, value: n };
   }
   const DEFAULT_PORT = 80;
