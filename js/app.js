@@ -57,6 +57,7 @@
 
   const currentScan = () => $('scanSelect').value;
   const currentState = () => ($('portStateToggle').checked ? 'open' : 'closed');
+  const currentCompliant = () => $('complianceToggle').checked;
   const speedFactor = () => parseFloat($('speedControl').value) || 1;
   const frameDuration = () => BASE_MS / speedFactor();
 
@@ -86,6 +87,13 @@
 
   function updateStateLabel() {
     $('stateLabel').textContent = t($('portStateToggle').checked ? 'ctl.stateOpen' : 'ctl.stateClosed');
+  }
+
+  // RFC 準拠トグルの表示と、判定できない注記の出し分け
+  function updateCompliance() {
+    const compliant = currentCompliant();
+    $('complianceLabel').textContent = t(compliant ? 'ctl.compliant' : 'ctl.noncompliant');
+    $('complianceNote').hidden = !(!compliant && C.affectedByCompliance(currentScan()));
   }
 
   // ---- ポート入力（確定のときだけ検証。打っている間は書き戻さない） ----
@@ -234,7 +242,8 @@
     if (!validatePortField(true)) { $('portInput').focus(); return; }
     const id = currentScan();
     const state = currentState();
-    const frames = C.getFrames(id, state);
+    const compliant = currentCompliant();
+    const frames = C.getFrames(id, state, compliant);
     clearTimeline();
     setBadge('pending');
     playing = true;
@@ -250,7 +259,7 @@
       await gap(myRun);
     }
     if (myRun === runId) {
-      setBadge(C.getJudgement(id, state));
+      setBadge(C.getJudgement(id, state, compliant));
       stopState();
     }
   }
@@ -385,6 +394,7 @@
     populateScans();
     updateScanMeta();
     updateStateLabel();
+    updateCompliance();
     renderExplain();
     renderIds();
     renderHelp();
@@ -399,6 +409,7 @@
 
   function onScanChange() {
     updateScanMeta();
+    updateCompliance();
     renderExplain();
     renderIds();
     reset();
@@ -409,12 +420,18 @@
     reset();
   }
 
+  function onComplianceChange() {
+    updateCompliance();
+    reset();
+  }
+
   function init() {
     I.init();
     populateScans();
     initHelp();
     $('scanSelect').addEventListener('change', onScanChange);
     $('portStateToggle').addEventListener('change', onStateChange);
+    $('complianceToggle').addEventListener('change', onComplianceChange);
     $('portInput').addEventListener('blur', () => validatePortField(true));
     $('speedControl').addEventListener('change', () => {});
     $('playBtn').addEventListener('click', () => { if (playing) togglePause(); else play(); });

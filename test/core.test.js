@@ -100,6 +100,34 @@ test('TCP フラグの一覧は凡例の6種。unknown な手法は例外', () =
   assert.throws(() => C.scenario('ack', 'open'), /unknown scan/);
 });
 
+test('RFC 793 非準拠: FIN/NULL/Xmas は開でも閉でも RST/ACK が返り判定できない', () => {
+  assert.deepEqual([...C.NONCOMPLIANT_AFFECTED].sort(), ['fin', 'null', 'xmas']);
+  for (const id of ['fin', 'null', 'xmas']) {
+    assert.ok(C.affectedByCompliance(id), id);
+    for (const state of ['open', 'closed']) {
+      const f = C.getFrames(id, state, false);
+      assert.equal(f.length, 2, `${id} ${state}`);
+      assert.equal(f[0].dir, 'out', id); // 送るパケットは準拠時と同じ
+      assert.equal(C.packetLabel(f[1]), 'RST+ACK', id);
+      assert.equal(f[1].descKey, 'f.rstAckNoncompliant', id);
+      assert.equal(C.getJudgement(id, state, false), 'undecidable', `${id} ${state}`);
+    }
+  }
+});
+
+test('RFC 793 非準拠は TCP Connect・SYN・UDP には影響しない（準拠と同じ）', () => {
+  for (const id of ['tcp-connect', 'tcp-syn', 'udp']) {
+    assert.equal(C.affectedByCompliance(id), false, id);
+    for (const state of ['open', 'closed']) {
+      assert.deepEqual(C.getFrames(id, state, false), C.getFrames(id, state, true), `${id} ${state}`);
+      assert.equal(C.getJudgement(id, state, false), C.getJudgement(id, state, true), `${id} ${state}`);
+    }
+  }
+  // 既定（compliant 省略）は準拠として扱う
+  assert.equal(C.getJudgement('fin', 'open'), 'openFiltered');
+  assert.equal(C.getJudgement('fin', 'open', false), 'undecidable');
+});
+
 test('フレームの descKey は、すべて f. で始まる（文言の辞書キー）', () => {
   for (const id of C.SCAN_IDS) {
     for (const state of ['open', 'closed']) {

@@ -24,6 +24,11 @@
     'ctl.state': '標的のポートの状態',
     'ctl.stateOpen': '開いている',
     'ctl.stateClosed': '閉じている',
+    'ctl.compliance': 'OSのTCPスタック',
+    'ctl.compliant': 'RFC 793準拠',
+    'ctl.noncompliant': '非準拠（Windowsなど）',
+    'ctl.complianceHint': 'FIN・NULL・Xmasは、RFC 793に準拠しないスタックだと開でも閉でもRSTを返すため判定できません',
+    'ctl.complianceNote': 'この手法はRFC 793非準拠のスタックでは判定できません（開でもRST/ACKが返るため）',
     'ctl.play': '▶ 再生',
     'ctl.pause': '⏸ 一時停止',
     'ctl.resume': '▶ 再開',
@@ -37,6 +42,7 @@
     'judge.open': '開いている（Open）',
     'judge.closed': '閉じている（Closed）',
     'judge.openFiltered': '開/フィルター（Open｜Filtered）',
+    'judge.undecidable': '判定できない（Undecidable）',
     'judge.pending': '判定前',
 
     'sec.timeline': '時系列',
@@ -69,6 +75,7 @@
     'f.timeoutRfc': '無応答（タイムアウト）→ RFC 793準拠なら開いている。フィルターでも無応答なのでopen｜filtered',
     'f.timeoutUdp': '無応答（タイムアウト）→ 開いているかフィルターされている（open｜filtered）',
     'f.rstAckIn': 'RST/ACKが返る → ポートは閉じている',
+    'f.rstAckNoncompliant': 'RST/ACKが返る → RFC 793非準拠のスタックは開いていてもRSTを返すため判定できない',
 
     // 手法ごと（name は手法名、summary は概要、pros・cons は \n 区切りの箇条書き）
     'scan.tcp-connect.name': 'TCP Connect（フルコネクト）',
@@ -155,6 +162,11 @@
     'ctl.state': 'Target port state',
     'ctl.stateOpen': 'Open',
     'ctl.stateClosed': 'Closed',
+    'ctl.compliance': 'OS TCP stack',
+    'ctl.compliant': 'RFC 793-compliant',
+    'ctl.noncompliant': 'Non-compliant (Windows, etc.)',
+    'ctl.complianceHint': 'On stacks that do not follow RFC 793, FIN/NULL/Xmas return RST whether the port is open or closed, so no verdict is possible',
+    'ctl.complianceNote': 'This method cannot judge an RFC 793 non-compliant stack (RST/ACK comes back even when open)',
     'ctl.play': '▶ Play',
     'ctl.pause': '⏸ Pause',
     'ctl.resume': '▶ Resume',
@@ -168,6 +180,7 @@
     'judge.open': 'Open',
     'judge.closed': 'Closed',
     'judge.openFiltered': 'Open | Filtered',
+    'judge.undecidable': 'Undecidable',
     'judge.pending': 'Not judged yet',
 
     'sec.timeline': 'Timeline',
@@ -199,6 +212,7 @@
     'f.timeoutRfc': 'No response (timeout) -> open on an RFC 793-compliant stack. A filter also stays silent, so it is open|filtered',
     'f.timeoutUdp': 'No response (timeout) -> open or filtered (open|filtered)',
     'f.rstAckIn': 'RST/ACK comes back -> the port is closed',
+    'f.rstAckNoncompliant': 'RST/ACK comes back -> an RFC 793 non-compliant stack returns RST even when the port is open, so no verdict is possible',
 
     'scan.tcp-connect.name': 'TCP Connect (full connect)',
     'scan.tcp-connect.summary': 'The most basic scan: it uses the OS `connect()` call to complete a full three-way handshake.',
