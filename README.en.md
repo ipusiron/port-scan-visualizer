@@ -89,6 +89,14 @@ How each method works, with nmap and RustScan examples, is in [SCANS.md](./SCANS
 
 ## 🎯 Use cases
 
+Ways of using this tool in particular
+
+- Seeing how a spec's ambiguity breeds divergent implementations (protocol and standards classes): the FIN, NULL and Xmas methods rely on RFC 793, which says a closed port returns RST and an open port stays silent. Switch the target OS to "non-compliant" and these three return RST/ACK for both open and closed, so the verdict becomes "undecidable" and open and closed can no longer be told apart. Non-compliance is seen on Windows, some Cisco, BSDI and OS/400. When a spec does not cover every case, implementations diverge and a method that relied on that behavior stops working, which you can check from the difference in responses
+- Seeing the trade-off between a quiet measurement and a certain one (measurement and detection-design classes): TCP Connect completes the three-way handshake, exchanging four packets, and is highly detectable by an IDS but gives a clear open-or-closed verdict. FIN sends a single packet and waits for silence (two frames including the timeout), is barely detectable, but rests its verdict on the absence of a reply. The quieter the measurement, the more it leans on nothing coming back and the less certain the result, a trade-off you can read from the pair of frame count and detectability
+- Confirming that "no reply" can be read two ways (logic and inference classes): four of the six methods (FIN, NULL, Xmas and UDP) report "Open｜Filtered" for an open port, because silence could mean the port is open or that a firewall dropped the packet. Only two, TCP Connect and TCP SYN, which draw a reply, can say "Open" for certain. It shows with a concrete example the pitfall in reasoning that absence of a response is not proof of absence
+
+General uses
+
 - Show the difference between SYN and Connect scans with an animation in security training or a class.
 - When an IDS/IPS log shows an irregular packet such as FIN, visualize which method it corresponds to and share it.
 - Let newcomers see, with their own eyes, the difference in responses caused by different flags.
