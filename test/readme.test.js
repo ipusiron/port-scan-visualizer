@@ -143,3 +143,25 @@ test('表記: 禁止語がない。強調は1節に2カ所まで、箇条書き�
     assert.doesNotMatch(line, bad, line);
   }
 });
+
+test('ユースケースの「このツールならではの使い方」の判定は計算部と合う（日英）', () => {
+  const [ja, en] = [DOCS.ja.text, DOCS.en.text];
+  // 1. 非準拠OSで FIN/NULL/Xmas が判定不能、開と閉が同じ
+  const affected = C.SCAN_IDS.filter((id) => C.getJudgement(id, 'open', false) === C.JUDGE.undecidable
+    && C.getJudgement(id, 'closed', false) === C.JUDGE.undecidable);
+  assert.deepEqual(affected, ['fin', 'null', 'xmas']);
+  assert.deepEqual([...C.NONCOMPLIANT_AFFECTED], affected);
+  assert.ok(ja.includes('FIN・NULL・Xmasの3手法') && ja.includes('Windows・一部Cisco・BSDI・OS/400'));
+  assert.ok(en.includes('FIN, NULL and Xmas methods') && en.includes('Windows, some Cisco, BSDI and OS/400'));
+  // 2. 観測の静かさと確実さ: Connect=4フレーム/高、FIN=2フレーム/低
+  assert.deepEqual([C.getFrames('tcp-connect', 'open', true).length, C.DETECTABILITY['tcp-connect']], [4, 'high']);
+  assert.deepEqual([C.getFrames('fin', 'open', true).length, C.DETECTABILITY.fin], [2, 'low']);
+  assert.ok(ja.includes('4つのパケット') && ja.includes('検知性は高い') && ja.includes('検知性は低い'));
+  assert.ok(en.includes('four packets') && en.includes('highly detectable') && en.includes('barely detectable'));
+  // 3. openFiltered になる手法（開ポート）が4、はっきり open が2
+  const openFiltered = C.SCAN_IDS.filter((id) => C.getJudgement(id, 'open', true) === C.JUDGE.openFiltered);
+  const definite = C.SCAN_IDS.filter((id) => C.getJudgement(id, 'open', true) === C.JUDGE.open);
+  assert.deepEqual([openFiltered, definite], [['fin', 'null', 'xmas', 'udp'], ['tcp-connect', 'tcp-syn']]);
+  assert.ok(ja.includes('6手法のうち4つ（FIN・NULL・Xmas・UDP）') && ja.includes('TCP ConnectとTCP SYNの2つ'));
+  assert.ok(en.includes('four of the six methods (FIN, NULL, Xmas and UDP)') && en.includes('TCP Connect and TCP SYN'));
+});
